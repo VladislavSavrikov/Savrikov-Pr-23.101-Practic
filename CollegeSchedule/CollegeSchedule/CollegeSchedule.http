@@ -1,6 +1,9 @@
 @CollegeSchedule_HostAddress = http://localhost:5023
 
-GET {{CollegeSchedule_HostAddress}}/weatherforecast/
+### 1. Получить все группы
+GET {{CollegeSchedule_HostAddress}}/api/groups
 Accept: application/json
 
-###
+### 2. Получить расписание для конкретной группы
+GET {{CollegeSchedule_HostAddress}}/api/schedule/group/ИП-21?start=2026-12-01&end=2026-12-31
+Accept: application/json

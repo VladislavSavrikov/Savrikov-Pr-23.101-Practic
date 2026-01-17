@@ -1,5 +1,15 @@
 [
   {
+    "ContainingType": "CollegeSchedule.Controllers.GroupsController",
+    "Method": "GetAllGroups",
+    "RelativePath": "api/Groups",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "CollegeSchedule.Controllers.ScheduleController",
     "Method": "GetSchedule",
     "RelativePath": "api/schedule/group/{groupName}",
