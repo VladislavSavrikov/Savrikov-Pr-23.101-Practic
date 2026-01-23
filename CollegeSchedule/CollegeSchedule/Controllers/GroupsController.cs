@@ -1,5 +1,5 @@
 ﻿using CollegeSchedule.Data;
-using CollegeSchedule.Models;
+using CollegeSchedule.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,14 +21,14 @@ namespace CollegeSchedule.Controllers
         public async Task<IActionResult> GetAllGroups()
         {
             var groups = await _context.StudentGroups
-                .Include(g => g.Specialty)  // Загружаем связанную специальность
-                .OrderBy(g => g.GroupName)  // Сортируем по названию группы
-                .Select(g => new
+                .Include(g => g.Specialty)
+                .OrderBy(g => g.GroupName)
+                .Select(g => new GroupDto
                 {
-                    g.GroupId,
-                    g.GroupName,
-                    g.Course,
-                    Specialty = g.Specialty.Name  // Берем только название специальности
+                    GroupId = g.GroupId,
+                    GroupName = g.GroupName,
+                    Course = g.Course,
+                    Specialty = g.Specialty.Name
                 })
                 .ToListAsync();
 

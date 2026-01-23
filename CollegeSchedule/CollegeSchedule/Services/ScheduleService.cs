@@ -82,30 +82,70 @@ namespace CollegeSchedule.Services
 
         private static LessonDto BuildLessonDto(IGrouping<dynamic, Schedule> lessonGroup)
         {
+            var firstSchedule = lessonGroup.FirstOrDefault(s => s.GroupPart == LessonGroupPart.FULL);
+            if (firstSchedule == null)
+            {
+                firstSchedule = lessonGroup.First();
+            }
+
             var lessonDto = new LessonDto
             {
                 LessonNumber = lessonGroup.Key.LessonNumber,
-                Time = $"{lessonGroup.Key.TimeStart:hh\\:mm}-{lessonGroup.Key.TimeEnd:hh\\:mm}",
+                Time = GetTimeString(lessonGroup.Key.TimeStart, lessonGroup.Key.TimeEnd),
+                Subject = firstSchedule.Subject?.Name,
+                Teacher = GetTeacherFullName(firstSchedule.Teacher),
+                TeacherPosition = firstSchedule.Teacher?.Position,
+                Classroom = firstSchedule.Classroom?.RoomNumber,
+                Building = firstSchedule.Classroom?.Building?.Name,
+                Address = firstSchedule.Classroom?.Building?.Address,
                 GroupParts = new Dictionary<LessonGroupPart, LessonPartDto?>()
             };
 
+            // Заполняем групповые части
             foreach (var part in lessonGroup)
             {
                 lessonDto.GroupParts[part.GroupPart] = new LessonPartDto
                 {
-                    Subject = part.Subject.Name,
-                    Teacher = $"{part.Teacher.LastName} {part.Teacher.FirstName} {part.Teacher.MiddleName}",
-                    TeacherPosition = part.Teacher.Position,
-                    Classroom = part.Classroom.RoomNumber,
-                    Building = part.Classroom.Building.Name,
-                    Address = part.Classroom.Building.Address
+                    Subject = part.Subject?.Name,
+                    Teacher = GetTeacherFullName(part.Teacher),
+                    TeacherPosition = part.Teacher?.Position,
+                    Classroom = part.Classroom?.RoomNumber,
+                    Building = part.Classroom?.Building?.Name,
+                    Address = part.Classroom?.Building?.Address
                 };
             }
 
-            if (!lessonDto.GroupParts.ContainsKey(LessonGroupPart.FULL))
-                lessonDto.GroupParts.TryAdd(LessonGroupPart.FULL, null);
+            // Добавляем отсутствующие части
+            foreach (var part in Enum.GetValues<LessonGroupPart>())
+            {
+                if (!lessonDto.GroupParts.ContainsKey(part))
+                {
+                    lessonDto.GroupParts[part] = null;
+                }
+            }
 
             return lessonDto;
+        }
+
+        private static string? GetTimeString(TimeOnly? timeStart, TimeOnly? timeEnd)
+        {
+            if (timeStart == null || timeEnd == null)
+                return null;
+
+            return $"{timeStart:HH\\:mm}-{timeEnd:HH\\:mm}";
+        }
+
+        private static string? GetTeacherFullName(Teacher? teacher)
+        {
+            if (teacher == null)
+                return null;
+
+            var parts = new List<string> { teacher.LastName, teacher.FirstName };
+            if (!string.IsNullOrWhiteSpace(teacher.MiddleName))
+            {
+                parts.Add(teacher.MiddleName);
+            }
+            return string.Join(" ", parts.Where(p => !string.IsNullOrWhiteSpace(p)));
         }
 
         private static Dictionary<DateTime, List<Schedule>> GroupSchedulesByDate(List<Schedule> schedules)
@@ -127,10 +167,12 @@ namespace CollegeSchedule.Services
                 .Select(BuildLessonDto)
                 .ToList();
 
+            var firstSchedule = daySchedules.First();
+
             return new ScheduleByDateDto
             {
-                LessonDate = daySchedules.First().LessonDate,
-                Weekday = daySchedules.First().Weekday.Name,
+                LessonDate = firstSchedule.LessonDate,
+                Weekday = firstSchedule.Weekday?.Name ?? firstSchedule.LessonDate.DayOfWeek.ToString(),
                 Lessons = lessons
             };
         }
